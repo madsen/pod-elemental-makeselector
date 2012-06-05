@@ -14,17 +14,173 @@ package Pod::Elemental::MakeSelector;
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See either the
 # GNU General Public License or the Artistic License for more details.
 #
-# ABSTRACT:
+# ABSTRACT: Build complex selectors as a single sub
 #---------------------------------------------------------------------
 
-use 5.008;
+use 5.010;
 use strict;
 use warnings;
 
 our $VERSION = '0.01';
 # This file is part of {{$dist}} {{$dist_version}} ({{$date}})
 
+use Carp qw(croak);
+use Perl6::Junction ();
+
+use Sub::Exporter -setup => {
+  exports => [ qw(make_selector) ],
+  groups  => { default => [ qw(make_selector) ]},
+};
+
 #=====================================================================
+sub add_value
+{
+  my ($valuesR, $value) = @_;
+
+  push @$valuesR, $value;
+
+  '$val' . $#$valuesR;
+} # end add_value
+
+#---------------------------------------------------------------------
+sub join_expressions
+{
+  my ($op, $expressionsR) = @_;
+
+  return @$expressionsR unless @$expressionsR > 1;
+
+  '(' . join("\n    $op ", @$expressionsR) . "\n  )";
+} # end join_expressions
+
+#---------------------------------------------------------------------
+sub conjunction_action {
+  my ($op, $valuesR, $inputR) = @_;
+
+  my $arrayR = shift @$inputR;
+  croak "Expected arrayref for -$op, got $arrayR"
+      unless ref($arrayR) eq 'ARRAY';
+
+  my @expressions;
+  build_selector($valuesR, \@expressions, @$arrayR);
+
+  join_expressions($op, \@expressions);
+} # end conjunction_action
+
+#---------------------------------------------------------------------
+sub type_action
+{
+  my ($check, $class) = @_;
+
+  "\$para->$check('Pod::Elemental::$class')";
+} # end type_action
+
+#---------------------------------------------------------------------
+our %action = (
+  -and     => sub { conjunction_action(and => @_) },
+  -or      => sub { conjunction_action(or  => @_) },
+  -blank   => sub { type_action(qw(isa Element::Generic::Blank)) },
+  -flat    => sub { type_action(qw(does Flat)) },
+  -node    => sub { type_action(qw(does Node)) },
+  -bad     => sub { 'foobar' },
+
+  -code => sub {
+    my ($valuesR, $inputR) = @_;
+
+    my $name = add_value($valuesR,
+                          shift @$inputR // croak "-code requires a value");
+    "$name->(\$para)";
+  }, #end -code
+
+  -command => sub {
+    my ($valuesR, $inputR) = @_;
+
+    my @expressions = type_action(qw(does Command));
+
+    if (@$inputR and not $inputR->[0] =~ /^-/) {
+      my $value = shift @$inputR;
+      $value = Perl6::Junction::any(@$value) if ref($value) eq 'ARRAY';
+      my $name = add_value($valuesR, $value);
+      push @expressions, "\$para->command eq $name";
+    } # end if specific command(s) listed
+
+    join_expressions(and => \@expressions);
+  }, #end -command
+
+  -content => sub {
+    my ($valuesR, $inputR) = @_;
+
+    my $name = add_value($valuesR,
+                          shift @$inputR // croak "-content requires a value");
+    "\$para->content ~~ $name";
+  }, #end -content
+
+  -region => sub {
+    my ($valuesR, $inputR) = @_;
+
+    my @expressions = type_action(qw(isa Element::Pod5::Region));
+
+    if (@$inputR and not $inputR->[0] =~ /^-/) {
+      my $name = add_value($valuesR, shift @$inputR);
+      push @expressions, "\$para->format_name ~~ $name";
+    } # end if specific format(s) listed
+
+    join_expressions(and => \@expressions);
+  }, #end -region
+
+); # end %action
+
+#---------------------------------------------------------------------
+sub build_selector
+{
+  my $valuesR = shift;
+  my $expR    = shift;
+
+  while (@_) {
+    my $type = shift;
+
+    my $action = $action{$type}
+        or croak "Expected selector type, got $type";
+
+    push @$expR, $action->($valuesR, \@_);
+  } # end while more selectors
+} # end build_selector
+
+#---------------------------------------------------------------------
+sub make_selector
+{
+  my @values;
+  my @expressions;
+
+  build_selector(\@values, \@expressions, @_);
+
+  my $code = ("sub { my \$para = shift; return (\n  " .
+              join("\n  and ", @expressions) .
+              "\n)}\n");
+
+  $code = sprintf("my (%s) = \@values;\n\n%s",
+                  join(', ', map { '$val' . $_ } 0 .. $#values),
+                  $code)
+      if @values;
+
+  #say $code;
+  my ($sub, $err);
+  {
+    local $@;
+    $sub = eval $code;
+    $err = $@;
+  }
+
+  unless (ref $sub) {
+    my $lineNum = ($code =~ tr/\n//);
+    my $fmt = '%' . length($lineNum) . 'd: ';
+    $lineNum = 0;
+    $code =~ s/^/sprintf $fmt, ++$lineNum/gem;
+
+    die "Building selector failed:\n$code$err";
+  }
+
+  $sub;
+} # end make_selector
 
 #=====================================================================
 # Package Return Value:
