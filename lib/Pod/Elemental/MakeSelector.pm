@@ -52,7 +52,8 @@ sub join_expressions
 } # end join_expressions
 
 #---------------------------------------------------------------------
-sub conjunction_action {
+sub conjunction_action
+{
   my ($op, $valuesR, $inputR) = @_;
 
   my $arrayR = shift @$inputR;
@@ -64,6 +65,23 @@ sub conjunction_action {
 
   join_expressions($op, \@expressions);
 } # end conjunction_action
+
+sub region_action
+{
+  my ($valuesR, $inputR, $pod) = @_;
+
+  my @expressions = type_action(qw(isa Element::Pod5::Region));
+
+  push @expressions, ($pod ? '' : 'not ') . '$para->is_pod'
+      if defined $pod;
+
+  if (@$inputR and not $inputR->[0] =~ /^-/) {
+    my $name = add_value($valuesR, shift @$inputR);
+    push @expressions, "\$para->format_name ~~ $name";
+  } # end if specific format(s) listed
+
+  join_expressions(and => \@expressions);
+} #end region_action
 
 #---------------------------------------------------------------------
 sub type_action
@@ -111,18 +129,9 @@ our %action = (
     "\$para->content ~~ $name";
   }, #end -content
 
-  -region => sub {
-    my ($valuesR, $inputR) = @_;
-
-    my @expressions = type_action(qw(isa Element::Pod5::Region));
-
-    if (@$inputR and not $inputR->[0] =~ /^-/) {
-      my $name = add_value($valuesR, shift @$inputR);
-      push @expressions, "\$para->format_name ~~ $name";
-    } # end if specific format(s) listed
-
-    join_expressions(and => \@expressions);
-  }, #end -region
+  -region       => \&region_action,
+  -podregion    => sub { region_action(@_, 1) },
+  -nonpodregion => sub { region_action(@_, 0) },
 
 ); # end %action
 
