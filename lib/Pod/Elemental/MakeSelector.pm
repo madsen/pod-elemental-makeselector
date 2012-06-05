@@ -25,7 +25,6 @@ our $VERSION = '0.01';
 # This file is part of {{$dist}} {{$dist_version}} ({{$date}})
 
 use Carp qw(croak);
-use Perl6::Junction ();
 
 use Sub::Exporter -setup => {
   exports => [ qw(make_selector) ],
@@ -97,10 +96,8 @@ our %action = (
     my @expressions = type_action(qw(does Command));
 
     if (@$inputR and not $inputR->[0] =~ /^-/) {
-      my $value = shift @$inputR;
-      $value = Perl6::Junction::any(@$value) if ref($value) eq 'ARRAY';
-      my $name = add_value($valuesR, $value);
-      push @expressions, "\$para->command eq $name";
+      my $name = add_value($valuesR, shift @$inputR);
+      push @expressions, "\$para->command ~~ $name";
     } # end if specific command(s) listed
 
     join_expressions(and => \@expressions);
