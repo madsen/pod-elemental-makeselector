@@ -1,7 +1,10 @@
 Pod-Elemental-MakeSelector version {{$version}}, released {{$date}}
 
 
-This module {{ die "needs a description (README.md too)" }}.
+This module provides an alternative to Pod::Elemental::Selectors.  It
+allows more complex criteria to be expressed by a single selector,
+including criteria that Pod::Elemental::Selectors doesn't currently
+handle.
 
 
 
