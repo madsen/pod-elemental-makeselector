@@ -23,10 +23,11 @@ use Pod::Elemental::Element::Generic::Blank;
 use Pod::Elemental::Element::Generic::Command;
 use Pod::Elemental::Element::Pod5::Command;
 use Pod::Elemental::Element::Pod5::Ordinary;
+use Pod::Elemental::Element::Pod5::Region;
 
 use Pod::Elemental::MakeSelector;
 
-plan tests => 12;
+plan tests => 18;
 
 #---------------------------------------------------------------------
 my %node = (
@@ -66,6 +67,16 @@ my %node = (
   ),
   pGoodbye => Pod::Elemental::Element::Pod5::Ordinary->new(
     content => 'Goodbye, all!',
+  ),
+  rCoverage => Pod::Elemental::Element::Pod5::Region->new(
+    format_name => 'Pod::Coverage',
+    is_pod      => 0,
+    content     => '',
+  ),
+  rList => Pod::Elemental::Element::Pod5::Region->new(
+    format_name => 'list',
+    is_pod      => 1,
+    content     => '',
   ),
 );
 
@@ -131,12 +142,16 @@ test(multiOr => 'blank gh1AUTHOR h1AUTHOR h1AUTHORS',
 );
 
 test(allCommands => 'gh1AUTHOR h1AUTHOR h1AUTHORS h1AUTHORSCREDITS
-                     h1DESC h2Notes h3About',
+                     h1DESC h2Notes h3About rCoverage rList',
   -command
 );
 
 test(head23 => 'h2Notes h3About',
   -command => [qw(head2 head3)],
+);
+
+test(head23re => 'h2Notes h3About',
+  -command => qr/^head[23]/,
 );
 
 test(flat => 'blank pGoodbye pHello',
@@ -155,6 +170,26 @@ test(hello => 'pHello',
 test(helloGoodbye => 'pGoodbye pHello',
   -flat,
   -content => [qr/Hello/, qr/Goodbye/ ],
+);
+
+test(allRegions => 'rCoverage rList',
+  -region
+);
+
+test(listRegions => 'rList',
+  -region => 'list',
+);
+
+test(podRegions => 'rList',
+  -podregion,
+);
+
+test(podListRegions => 'rList',
+  -podregion => 'list',
+);
+
+test(nonPodRegions => 'rCoverage',
+  -nonpodregion,
 );
 
 done_testing;
