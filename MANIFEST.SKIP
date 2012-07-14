@@ -21,4 +21,4 @@
 ^Build$
 ^Build\.bat$
 ^dist\.ini$
-^tools/loom\.pl
+^weaver\.ini$

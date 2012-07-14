@@ -66,6 +66,7 @@ sub conjunction_action
   join_expressions($op, \@expressions);
 } # end conjunction_action
 
+#---------------------------------------------------------------------
 sub region_action
 {
   my ($valuesR, $inputR, $pod) = @_;
@@ -81,7 +82,7 @@ sub region_action
   } # end if specific format(s) listed
 
   join_expressions(and => \@expressions);
-} #end region_action
+} # end region_action
 
 #---------------------------------------------------------------------
 sub type_action
@@ -98,7 +99,6 @@ our %action = (
   -blank   => sub { type_action(qw(isa Element::Generic::Blank)) },
   -flat    => sub { type_action(qw(does Flat)) },
   -node    => sub { type_action(qw(does Node)) },
-  -bad     => sub { 'foobar' },
 
   -code => sub {
     my ($valuesR, $inputR) = @_;
@@ -132,8 +132,70 @@ our %action = (
   -region       => \&region_action,
   -podregion    => sub { region_action(@_, 1) },
   -nonpodregion => sub { region_action(@_, 0) },
-
 ); # end %action
+
+=head1 CRITERIA
+
+Most criteria that accept a parameter test it using smart matching,
+which means that they accept a string, a regex, or an arrayref of
+strings and/or regexes.  (This also means that Perl 5.10 is required
+to use Pod::Elemental::MakeSelector.)
+
+Optional parameters must not begin with C<->, or they will be treated
+as criteria instead.
+
+=head2 Simple Criteria
+
+  -blank, # isa Pod::Elemental::Element::Generic::Blank
+  -flat,  # does Pod::Elemental::Flat
+  -node,  # does Pod::Elemental::Node
+
+=head2 Command Paragraphs
+
+  -command,           # does Pod::Elemental::Command
+  -command => 'head1',           # and is =head1
+  -command => qr/^head[23]/,     # and matches regex
+  -command => [qw(head1 head2)], # 1 element must match
+
+=head2 Content
+
+  -content => 'AUTHOR',       # matches =head1 AUTHOR
+  -content => qr/^AUTHORS?$/, # or =head1 AUTHORS
+  -content => [qw(AUTHOR BUGS)], # 1 element must match
+
+This criterion is normally used in conjunction with C<-command> to
+select a section with a specific title.
+
+=head2 Regions
+
+  -region, # isa Pod::Elemental::Element::Pod5::Region
+  -region => 'list',      # and format_name eq 'list'
+  -region => qr/^list$/i, # and format_name matches regex
+  -region => [qw(list group)], # 1 element must match
+  -podregion    => 'list',          # =for :list
+  -nonpodregion => 'Pod::Coverage', # =for Pod::Coverage
+
+Regions are created with the C<=begin> or C<=for> commands.  The
+C<-podregion> and C<-nonpodregion> criteria work exactly like
+C<-region>, but they ensure that C<is_pod> is either true or false,
+respectively.
+
+=head2 Conjunctions
+
+  -and => [ ... ], # all criteria must be true
+  -or  => [ ... ], # at least one must be true
+
+These take an arrayref of criteria, and combine them using the
+specified operator.  Note that C<make_selector> does C<-and> by default;
+S<C<make_selector @criteria>> is equivalent to
+S<C<< make_selector -and => \@criteria >>>.
+
+=head2 Custom Criteria
+
+  -code => sub { ... }, # test $_[0] any way you want
+  -code => $selector,   # also accepts another selector
+
+=cut
 
 #---------------------------------------------------------------------
 sub build_selector
@@ -150,8 +212,35 @@ sub build_selector
     push @$expR, $action->($valuesR, \@_);
   } # end while more selectors
 } # end build_selector
-
 #---------------------------------------------------------------------
+
+# FIXME: These subs will be documented when I figure out how
+# make_selector should be extended.
+
+=for Pod::Coverage
+add_value
+build_selector
+conjunction_action
+join_expressions
+region_action
+type_action
+
+
+=sub make_selector
+
+  $selector = make_selector( ... );
+
+C<make_selector> takes a list of criteria and returns a selector that
+tests whether a supplied paragraph matches all the criteria.  It does
+not allow you to pass a paragraph to be checked immediately; if you
+want to do that, then call the selector yourself.  i.e., these two
+lines are equivalent:
+
+  s_command(head1 => $para); # From Pod::Elemental::Selectors
+  make_selector(qw(-command head1))->($para);
+
+=cut
+
 sub make_selector
 {
   my @values;
@@ -193,8 +282,37 @@ sub make_selector
 
 1;
 
-__END__
-
 =head1 SYNOPSIS
 
   use Pod::Elemental::MakeSelector;
+
+  my $author_selector = make_selector(
+    -command => 'head1',
+    -content => qr/^AUTHORS?$/,
+  );
+
+=head1 DESCRIPTION
+
+The selectors provided by L<Pod::Elemental::Selectors> are fairly
+limited, and there's no built-in way to combine them.  For example,
+there's no simple way to generate a selector that matches a section
+with a specific name (a fairly common requirement).
+
+This module exports a single subroutine: C<make_selector>.  It can
+handle everything that Pod::Elemental::Selectors can do, plus many
+things it can't.  It also makes it easy to combine criteria.  It
+compiles all the criteria you supply into a single coderef.
+
+A selector is just a coderef that expects a single parameter: an
+object that does Pod::Elemental::Paragraph.  It returns a true value
+if the paragraph meets the selector's criteria.
+
+=head1 SEE ALSO
+
+L<Pod::Elemental::Selectors> comes with L<Pod::Elemental>, but is much
+more limited than this module.
+
+=head1 DEPENDENCIES
+
+Pod::Elemental::MakeSelector requires L<Pod::Elemental> and Perl 5.10
+or later.
