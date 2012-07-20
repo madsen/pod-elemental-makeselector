@@ -14,7 +14,7 @@
 # Test Pod::Elemental::MakeSelector
 #---------------------------------------------------------------------
 
-use 5.010;
+use 5.010_001;                  # smart-matching is broken in 5.10.0
 use strict;
 use warnings;
 

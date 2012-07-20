@@ -17,11 +17,11 @@ package Pod::Elemental::MakeSelector;
 # ABSTRACT: Build complex selectors as a single sub
 #---------------------------------------------------------------------
 
-use 5.010;
+use 5.010_001;                  # smart-matching is broken in 5.10.0
 use strict;
 use warnings;
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 # This file is part of {{$dist}} {{$dist_version}} ({{$date}})
 
 use Carp qw(croak);
@@ -138,7 +138,7 @@ our %action = (
 
 Most criteria that accept a parameter test it using smart matching,
 which means that they accept a string, a regex, or an arrayref of
-strings and/or regexes.  (This also means that Perl 5.10 is required
+strings and/or regexes.  (This also means that Perl 5.10.1 is required
 to use Pod::Elemental::MakeSelector.)
 
 Optional parameters must not begin with C<->, or they will be treated
@@ -314,5 +314,5 @@ more limited than this module.
 
 =head1 DEPENDENCIES
 
-Pod::Elemental::MakeSelector requires L<Pod::Elemental> and Perl 5.10
+Pod::Elemental::MakeSelector requires L<Pod::Elemental> and Perl 5.10.1
 or later.

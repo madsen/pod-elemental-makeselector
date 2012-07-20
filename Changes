@@ -1,4 +1,8 @@
 Revision history for Pod-Elemental-MakeSelector
 
+0.02   NOT
+	- Require Perl 5.10.1, as 5.10.0 doesn't support matching
+	  against an arrayref of regexes
+
 0.01   July 14, 2012
 	- Initial release
