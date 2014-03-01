@@ -1,6 +1,6 @@
 Revision history for Pod-Elemental-MakeSelector
 
-0.03   NOT
+0.03   2014-03-01
 	- Suppress "Smartmatch is experimental" warning on Perl 5.18 and up
 
 0.02   2012-07-20
