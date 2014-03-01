@@ -21,7 +21,7 @@ use 5.010_001;                  # smart-matching is broken in 5.10.0
 use strict;
 use warnings;
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 # This file is part of {{$dist}} {{$dist_version}} ({{$date}})
 
 use Carp qw(croak);
@@ -30,6 +30,9 @@ use Sub::Exporter -setup => {
   exports => [ qw(make_selector) ],
   groups  => { default => [ qw(make_selector) ]},
 };
+
+# In Perl 5.18, smartmatch emits a warning
+no if $] >= 5.018, warnings => "experimental::smartmatch";
 
 #=====================================================================
 sub add_value

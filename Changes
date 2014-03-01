@@ -1,5 +1,8 @@
 Revision history for Pod-Elemental-MakeSelector
 
+0.03   NOT
+	- Suppress "Smartmatch is experimental" warning on Perl 5.18 and up
+
 0.02   2012-07-20
 	- Require Perl 5.10.1, as 5.10.0 doesn't support matching
 	  against an arrayref of regexes
