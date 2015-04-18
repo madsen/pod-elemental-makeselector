@@ -35,6 +35,17 @@ use Sub::Exporter -setup => {
 no if $] >= 5.018, warnings => "experimental::smartmatch";
 
 #=====================================================================
+# Recturn true if the first element of the arrayref is not a string
+# starting with -
+
+sub _has_optional_parameter
+{
+  my ($inputR) = @_;
+
+  @$inputR and (ref $inputR->[0] or not $inputR->[0] =~ /^-/);
+} # end _has_optional_parameter
+
+#---------------------------------------------------------------------
 sub add_value
 {
   my ($valuesR, $value) = @_;
@@ -79,7 +90,7 @@ sub region_action
   push @expressions, ($pod ? '' : 'not ') . '$para->is_pod'
       if defined $pod;
 
-  if (@$inputR and not $inputR->[0] =~ /^-/) {
+  if (_has_optional_parameter($inputR)) {
     my $name = add_value($valuesR, shift @$inputR);
     push @expressions, "\$para->format_name ~~ $name";
   } # end if specific format(s) listed
@@ -116,7 +127,7 @@ our %action = (
 
     my @expressions = type_action(qw(does Command));
 
-    if (@$inputR and not $inputR->[0] =~ /^-/) {
+    if (_has_optional_parameter($inputR)) {
       my $name = add_value($valuesR, shift @$inputR);
       push @expressions, "\$para->command ~~ $name";
     } # end if specific command(s) listed
@@ -145,7 +156,8 @@ strings and/or regexes.  (This also means that Perl 5.10.1 is required
 to use Pod::Elemental::MakeSelector.)
 
 Optional parameters must not begin with C<->, or they will be treated
-as criteria instead.
+as criteria instead.  If you need an optional parameter that begins
+with C<->, put it inside an arrayref.
 
 =head2 Simple Criteria
 
