@@ -27,7 +27,7 @@ use Pod::Elemental::Element::Pod5::Region;
 
 use Pod::Elemental::MakeSelector;
 
-plan tests => 18;
+plan tests => 21;
 
 #---------------------------------------------------------------------
 my %node = (
@@ -154,6 +154,16 @@ test(head23re => 'h2Notes h3About',
   -command => qr/^head[23]/,
 );
 
+test(headNmixedArray => 'gh1AUTHOR h1AUTHOR h1AUTHORS h1AUTHORSCREDITS
+                         h1DESC h2Notes h3About',
+  -command => [ 'head1', qr/^head[23]/ ],
+);
+
+test(AmixedArray => 'gh1AUTHOR h1AUTHOR h1AUTHORS h1AUTHORSCREDITS h3About',
+  -command => [ qr/^head[12]/, 'head3' ],
+  -content => qr/^A/,
+);
+
 test(flat => 'blank pGoodbye pHello',
   -flat
 );
@@ -190,6 +200,10 @@ test(podListRegions => 'rList',
 
 test(nonPodRegions => 'rCoverage',
   -nonpodregion,
+);
+
+test(nullArray => '',
+  -command => [],
 );
 
 done_testing;

@@ -1,5 +1,8 @@
 Revision history for Pod-Elemental-MakeSelector
 
+0.04   NOT
+	- Add tests with arrayrefs containing both strings & regexps
+
 0.03   2014-03-01
 	- Suppress "Smartmatch is experimental" warning on Perl 5.18 and up
 

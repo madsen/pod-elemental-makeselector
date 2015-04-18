@@ -21,7 +21,7 @@ use 5.010_001;                  # smart-matching is broken in 5.10.0
 use strict;
 use warnings;
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 # This file is part of {{$dist}} {{$dist_version}} ({{$date}})
 
 use Carp qw(croak);
