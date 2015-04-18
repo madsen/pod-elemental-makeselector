@@ -1,6 +1,6 @@
 Revision history for Pod-Elemental-MakeSelector
 
-0.04   NOT
+0.04   2015-04-18
 	- Refine how optional parameters are detected
 	- Add tests with arrayrefs containing both strings & regexps
 
