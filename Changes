@@ -1,5 +1,11 @@
 Revision history for Pod-Elemental-MakeSelector
 
+0.05   NOT
+	- Don't use the experimental smartmatch operator.
+	  Instead, the code generator implements limited smartmatching.
+	  This could potentially break your code if you were doing something
+	  the new matcher doesn't support.
+
 0.04   2015-04-18
 	- Refine how optional parameters are detected
 	- Add tests with arrayrefs containing both strings & regexps

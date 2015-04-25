@@ -17,11 +17,11 @@ package Pod::Elemental::MakeSelector;
 # ABSTRACT: Build complex selectors as a single sub
 #---------------------------------------------------------------------
 
-use 5.010_001;                  # smart-matching is broken in 5.10.0
+use 5.008;
 use strict;
 use warnings;
 
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 # This file is part of {{$dist}} {{$dist_version}} ({{$date}})
 
 use Carp qw(croak);
@@ -30,9 +30,6 @@ use Sub::Exporter -setup => {
   exports => [ qw(make_selector) ],
   groups  => { default => [ qw(make_selector) ]},
 };
-
-# In Perl 5.18, smartmatch emits a warning
-no if $] >= 5.018, warnings => "experimental::smartmatch";
 
 #=====================================================================
 # Recturn true if the first element of the arrayref is not a string
@@ -66,6 +63,44 @@ sub join_expressions
 } # end join_expressions
 
 #---------------------------------------------------------------------
+# Supports only string, Regexp, or arrayref of either.
+# Nested arrayrefs should work, but are not documented.
+
+sub smart_match
+{
+  my ($valuesR, $value, $match) = @_;
+
+  TEST_REF: {
+    my $ref = ref $match;
+
+    if ($ref eq 'ARRAY') {
+      my $count = @$match;
+      if ($count == 0) {
+        return '0';               # Empty array never matches
+      } elsif ($count == 1) {
+        $match = $match->[0];
+        redo TEST_REF;
+      } else {
+        my $exp = join_expressions('or',
+          [ map smart_match($valuesR, '$v', $_), @$match ]
+        );
+        if ($value eq '$v') {
+          return $exp;
+        } else {
+          return sprintf 'do { my $v = %s; %s }', $value, $exp;
+        }
+      }
+    } elsif ($ref) {
+      return "$value =~ " . add_value($valuesR, $match);
+    } else {
+      return "$value eq " . add_value($valuesR, $match);
+    }
+  }
+
+  die "Can't reach";
+} # end smart_match
+
+#---------------------------------------------------------------------
 sub conjunction_action
 {
   my ($op, $valuesR, $inputR) = @_;
@@ -91,8 +126,8 @@ sub region_action
       if defined $pod;
 
   if (_has_optional_parameter($inputR)) {
-    my $name = add_value($valuesR, shift @$inputR);
-    push @expressions, "\$para->format_name ~~ $name";
+    push @expressions, smart_match($valuesR, '$para->format_name',
+                                   shift @$inputR);
   } # end if specific format(s) listed
 
   join_expressions(and => \@expressions);
@@ -128,8 +163,7 @@ our %action = (
     my @expressions = type_action(qw(does Command));
 
     if (_has_optional_parameter($inputR)) {
-      my $name = add_value($valuesR, shift @$inputR);
-      push @expressions, "\$para->command ~~ $name";
+      push @expressions, smart_match($valuesR, '$para->command', shift @$inputR);
     } # end if specific command(s) listed
 
     join_expressions(and => \@expressions);
@@ -138,9 +172,8 @@ our %action = (
   -content => sub {
     my ($valuesR, $inputR) = @_;
 
-    my $name = add_value($valuesR,
-                          shift @$inputR // croak "-content requires a value");
-    "\$para->content ~~ $name";
+    smart_match($valuesR, '$para->content',
+                shift @$inputR // croak "-content requires a value");
   }, #end -content
 
   -region       => \&region_action,
@@ -150,10 +183,11 @@ our %action = (
 
 =head1 CRITERIA
 
-Most criteria that accept a parameter test it using smart matching,
-which means that they accept a string, a regex, or an arrayref of
-strings and/or regexes.  (This also means that Perl 5.10.1 is required
-to use Pod::Elemental::MakeSelector.)
+Most criteria that accept a parameter accept a string, a regex, or an
+arrayref of strings and/or regexes.  However,
+Pod::Elemental::MakeSelector I<does not> use Perl's C<~~> smartmatch
+operator because it is considered experimental.  Instoad, a limited
+form of smartmatching is performed by the code generator.
 
 Optional parameters must not begin with C<->, or they will be treated
 as criteria instead.  If you need an optional parameter that begins
@@ -238,6 +272,7 @@ build_selector
 conjunction_action
 join_expressions
 region_action
+smart_match
 type_action
 
 
@@ -272,7 +307,7 @@ sub make_selector
                   $code)
       if @values;
 
-  #say $code;
+  #print STDERR $code;
   my ($sub, $err);
   {
     local $@;
@@ -329,5 +364,5 @@ more limited than this module.
 
 =head1 DEPENDENCIES
 
-Pod::Elemental::MakeSelector requires L<Pod::Elemental> and Perl 5.10.1
+Pod::Elemental::MakeSelector requires L<Pod::Elemental> and Perl 5.8.0
 or later.
