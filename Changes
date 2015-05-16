@@ -1,6 +1,6 @@
 Revision history for Pod-Elemental-MakeSelector
 
-0.06   NOT
+0.06   2015-05-16 (Trial Release)
 	- Don't use the // (defined-or) operator for Perl 5.8 compatibility
 
 0.05   2015-04-25 (Trial Release)
