@@ -21,7 +21,7 @@ use 5.008;
 use strict;
 use warnings;
 
-our $VERSION = '0.05';
+our $VERSION = '0.06';
 # This file is part of {{$dist}} {{$dist_version}} ({{$date}})
 
 use Carp qw(croak);
@@ -41,6 +41,16 @@ sub _has_optional_parameter
 
   @$inputR and (ref $inputR->[0] or not $inputR->[0] =~ /^-/);
 } # end _has_optional_parameter
+
+#---------------------------------------------------------------------
+sub required_parameter
+{
+  my ($inputR, $error_message) = @_;
+
+  croak($error_message) unless defined(my $val = shift @$inputR);
+
+  $val;
+} # end required_parameter
 
 #---------------------------------------------------------------------
 sub add_value
@@ -153,7 +163,7 @@ our %action = (
     my ($valuesR, $inputR) = @_;
 
     my $name = add_value($valuesR,
-                          shift @$inputR // croak "-code requires a value");
+                         required_parameter($inputR, "-code requires a value"));
     "$name->(\$para)";
   }, #end -code
 
@@ -173,7 +183,7 @@ our %action = (
     my ($valuesR, $inputR) = @_;
 
     smart_match($valuesR, '$para->content',
-                shift @$inputR // croak "-content requires a value");
+                required_parameter($inputR, "-content requires a value"));
   }, #end -content
 
   -region       => \&region_action,
@@ -272,6 +282,7 @@ build_selector
 conjunction_action
 join_expressions
 region_action
+required_parameter
 smart_match
 type_action
 
