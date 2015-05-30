@@ -1,5 +1,13 @@
 Revision history for Pod-Elemental-MakeSelector
 
+0.10   NOT
+	- No longer uses the experimental smartmatch operator.
+	  Instead, the code generator implements limited smartmatching.
+	  This could potentially break your code if you were doing something
+	  the new matcher doesn't support.
+	- Now compatible with Perl 5.8
+	- No functional changes since 0.06 trial release
+
 0.06   2015-05-16 (Trial Release)
 	- Don't use the // (defined-or) operator for Perl 5.8 compatibility
 

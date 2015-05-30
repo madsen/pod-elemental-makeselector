@@ -21,7 +21,7 @@ use 5.008;
 use strict;
 use warnings;
 
-our $VERSION = '0.06';
+our $VERSION = '0.10';
 # This file is part of {{$dist}} {{$dist_version}} ({{$date}})
 
 use Carp qw(croak);
@@ -197,7 +197,9 @@ Most criteria that accept a parameter accept a string, a regex, or an
 arrayref of strings and/or regexes.  However,
 Pod::Elemental::MakeSelector I<does not> use Perl's C<~~> smartmatch
 operator because it is considered experimental.  Instoad, a limited
-form of smartmatching is performed by the code generator.
+form of smartmatching is performed by the code generator.  This means
+arrayrefs are iterated when the selector is compiled.  Modifying the
+arrayref later will not affect the selector.
 
 Optional parameters must not begin with C<->, or they will be treated
 as criteria instead.  If you need an optional parameter that begins
