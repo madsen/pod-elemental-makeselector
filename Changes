@@ -1,6 +1,6 @@
 Revision history for Pod-Elemental-MakeSelector
 
-0.10   NOT
+0.10   2015-05-30
 	- No longer uses the experimental smartmatch operator.
 	  Instead, the code generator implements limited smartmatching.
 	  This could potentially break your code if you were doing something
