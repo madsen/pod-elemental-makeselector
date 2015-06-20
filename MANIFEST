@@ -9,5 +9,6 @@ lib/Pod/Elemental/MakeSelector.pm
 t/00-all_prereqs.t
 t/00-load.t
 t/10-selector.t
+t/20-parsing.t
 xt/release/pod-coverage.t
 xt/release/pod-syntax.t
