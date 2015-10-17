@@ -1,6 +1,7 @@
 Revision history for Pod-Elemental-MakeSelector
 
-0.12   NOT
+0.12   2015-10-17
+	- No functional changes
 	- Fix typo in documentation
 
 0.11   2015-06-20
