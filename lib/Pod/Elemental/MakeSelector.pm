@@ -21,7 +21,7 @@ use 5.008;
 use strict;
 use warnings;
 
-our $VERSION = '0.11';
+our $VERSION = '0.12';
 # This file is part of {{$dist}} {{$dist_version}} ({{$date}})
 
 use Carp qw(croak);
@@ -196,7 +196,7 @@ our %action = (
 Most criteria that accept a parameter accept a string, a regex, or an
 arrayref of strings and/or regexes.  However,
 Pod::Elemental::MakeSelector I<does not> use Perl's C<~~> smartmatch
-operator because it is considered experimental.  Instoad, a limited
+operator, because it is considered experimental.  Instead, a limited
 form of smartmatching is performed by the code generator.  This means
 arrayrefs are iterated when the selector is compiled.  Modifying the
 arrayref later will not affect the selector.
@@ -221,7 +221,7 @@ with C<->, put it inside an arrayref.
 =head2 Content
 
   -content => 'AUTHOR',       # matches =head1 AUTHOR
-  -content => qr/^AUTHORS?$/, # or =head1 AUTHORS
+  -content => qr/^AUTHORS?$/, # or =head2 AUTHORS
   -content => [qw(AUTHOR BUGS)], # 1 element must match
 
 This criterion is normally used in conjunction with C<-command> to
